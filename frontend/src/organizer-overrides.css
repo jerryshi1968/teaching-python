@@ -1,0 +1,4 @@
+.tigao-organizer { --tigao-organizer-accent: #6670ed; --tigao-organizer-surface: rgba(255,255,255,.82); --tigao-organizer-border: #d9e2f1; --tigao-organizer-text: #223454; --tigao-organizer-muted: #8192af; }
+.tigao-organizer__card { border-radius: 29px !important; box-shadow: 0 5px 10px rgba(84,107,157,.11) !important; }
+.tigao-organizer__section-title { color: #647ba6 !important; }
+.tigao-organizer__project { border-width: 4px !important; background: rgba(255,255,255,.7) !important; }

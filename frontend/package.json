@@ -1,0 +1,21 @@
+{
+  "name": "@teaching-python/frontend",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@tigao/organizer-contracts": "file:vendor/organizer/tigao-organizer-contracts-0.1.3.tgz",
+    "@tigao/organizer-core": "file:vendor/organizer/tigao-organizer-core-0.1.3.tgz",
+    "@tigao/organizer-react": "file:vendor/organizer/tigao-organizer-react-0.1.3.tgz",
+    "react": "19.1.1",
+    "react-dom": "19.1.1"
+  },
+  "devDependencies": {
+    "@tigao/organizer-contract-tests": "file:vendor/organizer/tigao-organizer-contract-tests-0.1.3.tgz",
+    "@vitejs/plugin-react": "^6.1.1",
+    "vite": "^8.3.0"
+  },
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "@teaching-python/runner",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.mjs"
+  }
+}
