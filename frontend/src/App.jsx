@@ -30,7 +30,7 @@ export default function App() {
   const api = useMemo(() => createPythonApi({ getLanguage: () => languageRef.current }), []);
   const editor = useProjectEditor({ projectId: openedProject, api, demoMode: import.meta.env.DEV });
   const classroom = useClassBoard({ api, demoMode: import.meta.env.DEV });
-  useEffect(() => { if (editor.error) setNotice(editor.error.message); }, [editor.error]);
+  useEffect(() => { setNotice(editor.error?.message ?? ''); }, [editor.error]);
   useEffect(() => { if (classroom.error) setNotice(classroom.error.message); }, [classroom.error]);
   const adapter = useMemo(() => {
     const openProject = (id) => { setOpenedProject(id); };
@@ -63,7 +63,7 @@ export default function App() {
     </header>
     <section className="page-content editor-page">
       {notice && <div className="notice" role="status">{notice}<button type="button" onClick={() => setNotice('')}>×</button></div>}
-      <CodeEditor language={language} projectId={openedProject} source={editor.source} stdin={editor.stdin} run={editor.run} history={editor.history} readOnly={classroom.studentId !== 'me'} onSourceChange={editor.changeSource} onStdinChange={editor.changeStdin} onClose={() => setOpenedProject(null)} onSave={() => void editor.save().catch(() => {})} onRun={() => void editor.start().catch(() => {})} onStop={() => void editor.stop().catch(() => {})} />
+      <CodeEditor language={language} projectId={openedProject} source={editor.displaySource} stdin={editor.displayStdin} run={editor.displayRun} history={editor.history} historyView={editor.historyView} onSelectHistory={editor.selectHistory} onExitHistoryView={editor.exitHistoryView} readOnly={classroom.studentId !== 'me'} onSourceChange={editor.changeSource} onStdinChange={editor.changeStdin} onClose={() => setOpenedProject(null)} onSave={() => void editor.save().catch(() => {})} onRun={() => void editor.start().catch(() => {})} onStop={() => void editor.stop().catch(() => {})} />
     </section>
   </main>;
 
@@ -82,7 +82,7 @@ export default function App() {
       <section className="studio-heading"><div><h1>🎨 {language === 'en' ? 'My Creative Studio' : '我的创意工坊'} <span>✦</span></h1><p>{language === 'en' ? 'Build a little program and make ideas happen.' : '在这里收集你所有的精彩想法，开始天马行空的创意代码吧！'}</p></div><div className="studio-actions"><button type="button" className="secondary" onClick={() => openCreateDialog('group')}>▢ {language === 'en' ? 'New group' : '新建作品组'}</button><button type="button" className="primary" onClick={() => openCreateDialog('project')}>＋ {language === 'en' ? 'Create a project' : '动手做个新作品'}</button></div></section>
       {notice && <div className="notice" role="status">{notice}<button type="button" onClick={() => setNotice('')}>×</button></div>}
       {createKind && <div className="create-modal-backdrop" role="presentation"><form className="create-modal" onSubmit={(event) => void submitCreate(event)}><h2>{createKind === 'group' ? (language === 'en' ? 'New group' : '新建作品组') : (language === 'en' ? 'Create a project' : '动手做个新作品')}</h2><label>{createKind === 'group' ? (language === 'en' ? 'Group name' : '作品组名称') : (language === 'en' ? 'Project name' : '作品名称')}<input autoFocus value={createName} maxLength="100" onChange={(event) => setCreateName(event.target.value)} /></label><div className="create-modal-actions"><button type="button" className="secondary" onClick={() => setCreateKind(null)}>{language === 'en' ? 'Cancel' : '取消'}</button><button type="submit" className="primary" disabled={!createName.trim() || creating}>{creating ? (language === 'en' ? 'Creating…' : '正在新建…') : (language === 'en' ? 'Confirm' : '确定')}</button></div></form></div>}
-      {openedProject && <CodeEditor language={language} projectId={openedProject} source={editor.source} stdin={editor.stdin} run={editor.run} history={editor.history} readOnly={classroom.studentId !== 'me'} onSourceChange={editor.changeSource} onStdinChange={editor.changeStdin} onClose={() => setOpenedProject(null)} onSave={() => void editor.save().catch(() => {})} onRun={() => void editor.start().catch(() => {})} onStop={() => void editor.stop().catch(() => {})} />}
+      {openedProject && <CodeEditor language={language} projectId={openedProject} source={editor.displaySource} stdin={editor.displayStdin} run={editor.displayRun} history={editor.history} historyView={editor.historyView} onSelectHistory={editor.selectHistory} onExitHistoryView={editor.exitHistoryView} readOnly={classroom.studentId !== 'me'} onSourceChange={editor.changeSource} onStdinChange={editor.changeStdin} onClose={() => setOpenedProject(null)} onSave={() => void editor.save().catch(() => {})} onRun={() => void editor.start().catch(() => {})} onStop={() => void editor.stop().catch(() => {})} />}
       <section className="organizer-wrap"><ProjectOrganizer key={organizerVersion} adapter={adapter} ownerId={classroom.studentId === 'me' ? null : classroom.studentId} currentParentId={folderId} onCurrentParentIdChange={setFolderId} messages={activeMessages} renderProjectExtraActions={() => <span className="python-badge">Python</span>} /></section>
     </section>
   </main>;

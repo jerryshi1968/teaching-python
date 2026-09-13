@@ -48,7 +48,7 @@ export class PythonService {
   }
 
   async #refreshRun(run) {
-    if (!this.runnerGateway) return run;
+    if (!['queued', 'running'].includes(run.status) || !this.runnerGateway) return run;
     try {
       const { source, stdin, ...result } = await this.runnerGateway.get(run.id);
       return this.repository.transaction(() => this.repository.updateRunResult({ id: run.id, status: result.status, stdout: result.stdout ?? '', stderr: result.stderr ?? '' }));

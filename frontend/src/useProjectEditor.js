@@ -24,6 +24,7 @@ export function useProjectEditor({ projectId, api, demoMode = false }) {
   const [stdin, setStdin] = useState('');
   const [run, setRun] = useState(null);
   const [history, setHistory] = useState([]);
+  const [historyView, setHistoryView] = useState(null);
   const [error, setError] = useState(null);
   const controllerRef = useRef(null);
 
@@ -31,6 +32,7 @@ export function useProjectEditor({ projectId, api, demoMode = false }) {
     controllerRef.current?.abort();
     setError(null);
     setRun(null);
+    setHistoryView(null);
     if (!projectId) return undefined;
     if (demoMode) {
       setProject({ id: projectId, version: 1, readOnly: false });
@@ -82,6 +84,8 @@ export function useProjectEditor({ projectId, api, demoMode = false }) {
   }, [api, demoMode, project, source, stdin]);
 
   const start = useCallback(async () => {
+    setError(null);
+    setHistoryView(null);
     const saved = await save();
     const queued = await api.startRun(saved.id, { requestId: crypto.randomUUID() });
     setRun(queued);
@@ -101,6 +105,20 @@ export function useProjectEditor({ projectId, api, demoMode = false }) {
     }
   }, [api, save]);
 
+  const selectHistory = useCallback(async (id) => {
+    const selected = history.find((item) => item.id === id);
+    if (!selected) return;
+    try {
+      const snapshot = await api.getRunSource(id);
+      setHistoryView({ run: selected, source: snapshot.source, stdin: snapshot.stdin });
+      setError(null);
+    } catch (cause) {
+      setError(cause);
+      throw cause;
+    }
+  }, [api, history]);
+
+  const exitHistoryView = useCallback(() => setHistoryView(null), []);
   const stop = useCallback(async () => {
     if (!run || !['queued', 'running'].includes(run.status)) return run;
     controllerRef.current?.abort();
@@ -110,5 +128,5 @@ export function useProjectEditor({ projectId, api, demoMode = false }) {
     return stopped;
   }, [api, run]);
 
-  return { project, source, stdin, run, history, error, changeSource, changeStdin, save, start, stop };
+  return { project, source, stdin, run, history, historyView, displaySource: historyView?.source ?? source, displayStdin: historyView?.stdin ?? stdin, displayRun: historyView?.run ?? run, error, changeSource, changeStdin, save, start, stop, selectHistory, exitHistoryView };
 }

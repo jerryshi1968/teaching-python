@@ -37,6 +37,7 @@ export function createPythonApi(options) {
     startRun: (id, body = {}, options) => request(`/projects/${encodeURIComponent(id)}/run`, { ...options, method: 'POST', body }),
     listRuns: (id, options) => request(`/projects/${encodeURIComponent(id)}/runs`, options),
     getRun: (id, options) => request(`/runs/${encodeURIComponent(id)}`, options),
+    getRunSource: (id, options) => request(`/runs/${encodeURIComponent(id)}/source`, options),
     stopRun: (id, options) => request(`/runs/${encodeURIComponent(id)}/stop`, { ...options, method: 'POST', body: {} }),
     listClasses: (options) => request('/classes', options),
     listStudents: (id, options) => request(`/classes/${encodeURIComponent(id)}/students`, options),

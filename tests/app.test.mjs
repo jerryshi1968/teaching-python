@@ -64,3 +64,18 @@ test('teacher distribution creates one independent Python copy per enrolled stud
   assert.deepEqual(second.body.projects.map((item) => item.id), first.body.projects.map((item) => item.id));
   assert.equal(first.body.projects[0].projectType, 'python');
 });
+test('terminal runs are served from their persisted snapshot after a Runner restart', async () => {
+  const repository = new PythonRepository();
+  const runnerGateway = {
+    submit: async () => {},
+    get: async () => { throw new Error('A terminal run must not be requested from the Runner.'); },
+    stop: async () => ({ status: 'cancelled' })
+  };
+  const service = new PythonService(repository, runnerGateway);
+  const project = await service.createProject(actor, { name: 'Completed run', source: 'print(1)', stdin: '' });
+  const queued = await service.runProject(actor, project.id, { requestId: 'completed_run_1' });
+  await repository.updateRunResult({ id: queued.id, status: 'completed', stdout: '1\n', stderr: '' });
+  const result = await service.runs(actor, project.id);
+  assert.equal(result.runs[0].status, 'completed');
+  assert.equal(result.runs[0].stdout, '1\n');
+});

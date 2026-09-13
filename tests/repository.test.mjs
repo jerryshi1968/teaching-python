@@ -75,3 +75,13 @@ test('copying a student project makes a separate teacher-owned Python project', 
   assert.equal(copied.projectType, 'python');
   assert.equal(copied.source, 'print("hi")');
 });
+
+test('each project retains only its 20 most recent runs', async () => {
+  const repository = new PythonRepository();
+  const project = await repository.createProject({ ownerId: student.id, name: 'History' });
+  for (let index = 0; index < 22; index++) await repository.createRun({ project, ownerId: student.id, requestId: `history_${index}` });
+  const runs = await repository.listRuns(project.id);
+  assert.equal(runs.length, 20);
+  assert.equal(runs[0].requestId, 'history_21');
+  assert.equal(runs.at(-1).requestId, 'history_2');
+});

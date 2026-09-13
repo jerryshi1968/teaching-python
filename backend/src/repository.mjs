@@ -158,6 +158,8 @@ export class PythonRepository {
       projectType: PYTHON_PROJECT_TYPE
     };
     this.#data.runs.push(run);
+    const retained = new Set([run.id, ...this.#data.runs.filter((item) => item.projectId === project.id && item.projectType === PYTHON_PROJECT_TYPE && item.id !== run.id).slice(-19).map((item) => item.id)]);
+    this.#data.runs = this.#data.runs.filter((item) => item.projectId !== project.id || item.projectType !== PYTHON_PROJECT_TYPE || retained.has(item.id));
     return copy(run);
   }
 
@@ -177,7 +179,7 @@ export class PythonRepository {
     return copy(run);
   }
   async listRuns(projectId) {
-    return copy(this.#data.runs.filter((item) => item.projectId === projectId && item.projectType === PYTHON_PROJECT_TYPE));
+    return copy(this.#data.runs.filter((item) => item.projectId === projectId && item.projectType === PYTHON_PROJECT_TYPE).slice(-20).reverse());
   }
   async distributeProject({ project, teacherId, classId, requestId }) {
     const classroom = this.#data.classes.find((item) => item.id === classId && item.teacherId === teacherId);
