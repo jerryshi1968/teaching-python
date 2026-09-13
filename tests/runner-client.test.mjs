@@ -19,6 +19,7 @@ test('runner client only calls the loopback endpoint with the internal token', a
   assert.equal(result.status, 'queued');
   assert.equal(requests[0].url, 'http://127.0.0.1:5182/runs');
   assert.equal(requests[0].options.headers.authorization, `Bearer ${token}`);
+  assert.deepEqual(JSON.parse(requests[0].options.body), { id: 'run_1', source: 'print(1)', stdin: '' });
 });
 
 test('runner client rejects non-loopback endpoints and maps outages to a safe error', async () => {

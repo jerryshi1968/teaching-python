@@ -46,7 +46,7 @@ export function createPodmanExecutor({ podmanPath = 'podman', image, tempRoot, l
       return await new Promise((resolve, reject) => {
         const containerName = `teaching-python-${id ?? randomUUID()}`;
         const args = [
-          'run', '--rm', '--network', 'none', '--read-only', '--cap-drop', 'all', '--security-opt', 'no-new-privileges',
+          'run', '--interactive', '--rm', '--network', 'none', '--read-only', '--cap-drop', 'all', '--security-opt', 'no-new-privileges',
           '--pids-limit', String(limits.pids), '--memory', limits.memory, '--cpus', limits.cpus, '--ulimit', `nofile=${limits.nofile}:${limits.nofile}`,
           '--user', '65534:65534', '--tmpfs', '/tmp:rw,nosuid,nodev,noexec,size=16m', '--volume', `${workDirectory}:/work:ro`, '--workdir', '/work', '--name', containerName,
           image, 'python', '-I', '-B', '-u', '/work/main.py'
@@ -92,7 +92,7 @@ export function createPodmanExecutor({ podmanPath = 'podman', image, tempRoot, l
           stderr: normalizeText(stderr, workDirectory)
         })));
         if (signal) signal.addEventListener('abort', stopContainer, { once: true });
-        child.stdin.end(stdin);
+        child.stdin.end(Buffer.from(stdin, 'utf8'));
       });
     } finally {
       await rm(workDirectory, { recursive: true, force: true });

@@ -83,7 +83,8 @@ export class PythonService {
     const project = await this.repository.getProject(projectId);
     await this.#assertWritable(actor, project.ownerId);
     const run = await this.repository.transaction(() => this.repository.createRun({ project, ownerId: actor.id, requestId: input.requestId ?? null }));
-    await this.runnerGateway.submit({ id: run.id, source: run.source, stdin: run.stdin });
+    const runnerInput = { id: run.id, source: run.source, stdin: run.stdin ?? '' };
+    await this.runnerGateway.submit(runnerInput);
     return this.#runSummary(run);
   }
 

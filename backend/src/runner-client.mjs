@@ -27,7 +27,7 @@ export function createRunnerClient({ baseUrl, token, fetchImpl = fetch }) {
   }
 
   return {
-    submit: (run) => request('/runs', { method: 'POST', body: run }),
+    submit: ({ id, source, stdin = '' }) => request('/runs', { method: 'POST', body: { id, source, stdin } }),
     get: (id) => request(`/runs/${encodeURIComponent(id)}`),
     stop: (id) => request(`/runs/${encodeURIComponent(id)}/stop`, { method: 'POST' })
   };
