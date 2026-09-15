@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowDown, ArrowRight, ArrowUp, FileCode2, Folder, GripVertical, Pencil, Plus, Trash2 } from 'lucide-react';
 import { ProjectOrganizer } from '@tigao/organizer-react';
 import { createDemoOrganizerAdapter } from './demo-organizer-adapter.mjs';
 import { useLanguage } from './i18n/LanguageContext.jsx';
@@ -9,20 +10,16 @@ import { createProjectOrganizerAdapter } from './project-organizer-adapter.mjs';
 import { useProjectEditor } from './useProjectEditor.js';
 import { useClassBoard } from './useClassBoard.js';
 
-function OrganizerIcon({ children }) {
-  return <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{children}</svg>;
-}
-
 const organizerIcons = {
-  group: <OrganizerIcon><path d="M3.5 6.5h6l2 2h9v9.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z" /></OrganizerIcon>,
-  project: <OrganizerIcon><path d="M6 3.5h8l4 4v13H6z" /><path d="M14 3.5v4h4" /><path d="m9.5 12-2 2 2 2M14.5 12l2 2-2 2" /></OrganizerIcon>,
-  drag: <OrganizerIcon><circle cx="9" cy="6" r="1" fill="currentColor" stroke="none" /><circle cx="15" cy="6" r="1" fill="currentColor" stroke="none" /><circle cx="9" cy="12" r="1" fill="currentColor" stroke="none" /><circle cx="15" cy="12" r="1" fill="currentColor" stroke="none" /><circle cx="9" cy="18" r="1" fill="currentColor" stroke="none" /><circle cx="15" cy="18" r="1" fill="currentColor" stroke="none" /></OrganizerIcon>,
-  up: <OrganizerIcon><path d="m6 10 6-6 6 6M12 4v16" /></OrganizerIcon>,
-  down: <OrganizerIcon><path d="M12 4v16M6 14l6 6 6-6" /></OrganizerIcon>,
-  rename: <OrganizerIcon><path d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10zM14 7l3 3" /></OrganizerIcon>,
-  move: <OrganizerIcon><path d="M4 12h16M15 7l5 5-5 5" /></OrganizerIcon>,
-  delete: <OrganizerIcon><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" /></OrganizerIcon>,
-  add: <OrganizerIcon><path d="M12 5v14M5 12h14" /></OrganizerIcon>
+  group: <Folder aria-hidden="true" />,
+  project: <FileCode2 aria-hidden="true" />,
+  drag: <GripVertical aria-hidden="true" />,
+  up: <ArrowUp aria-hidden="true" />,
+  down: <ArrowDown aria-hidden="true" />,
+  rename: <Pencil aria-hidden="true" />,
+  move: <ArrowRight aria-hidden="true" />,
+  delete: <Trash2 aria-hidden="true" />,
+  add: <Plus aria-hidden="true" />
 };
 
 const organizerMessages = {
