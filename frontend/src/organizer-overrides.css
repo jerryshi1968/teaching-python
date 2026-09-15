@@ -3,3 +3,37 @@
 .tigao-organizer__section-title { color: #647ba6 !important; }
 .tigao-organizer__project { border-width: 4px !important; background: rgba(255,255,255,.7) !important; }
 .organizer-wrap .tigao-organizer__empty { display: grid; place-items: center; width: min(100%, 520px); min-height: 300px; margin: 20px auto 0; padding: 24px; border: 4px dashed #cbd7e5; border-radius: 38px; background: rgba(255,255,255,.76); color: #526b98; font-size: 17px; font-weight: 800; }
+.studio-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.studio-actions button svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.organizer-wrap .tigao-organizer { --organizer-color-text: #223454; --organizer-color-muted: #8192af; --organizer-color-accent: #5964e8; --organizer-color-accent-soft: #eef0ff; --organizer-color-border: #d9e2f1; --organizer-color-surface: rgba(255,255,255,.82); --organizer-color-subtle: #f3f6ff; }
+.organizer-wrap .tigao-organizer__header { display: none; }
+.organizer-wrap .tigao-organizer__breadcrumbs { gap: 7px; margin-bottom: 24px; }
+.organizer-wrap .tigao-organizer__breadcrumb { border: 1px solid #cfd8f3; border-radius: 10px; padding: 7px 11px; color: #4f6090; font-size: 12px; font-weight: 700; }
+.organizer-wrap .tigao-organizer__breadcrumb[aria-current="page"] { border-color: #7d86f7; background: #7d86f7; color: white; }
+.organizer-wrap .tigao-organizer__content { gap: 28px; }
+.organizer-wrap .tigao-organizer__section { gap: 14px; }
+.organizer-wrap .tigao-organizer__section h2 { color: #657ba5; font-size: 12px; font-weight: 800; letter-spacing: 0; text-transform: none; }
+.organizer-wrap .tigao-organizer__card { display: flex; min-height: 176px; flex-direction: column; border-width: 4px; border-style: solid; background: rgba(255,255,255,.78); }
+.organizer-wrap .tigao-organizer__card--group { border-color: #c8d2ff; }
+.organizer-wrap .tigao-organizer__card--project { border-color: #82d9ed; }
+.organizer-wrap .tigao-organizer__item-main { min-height: 78px; flex: 1; align-items: flex-start; padding: 19px 20px 8px; }
+.organizer-wrap .tigao-organizer__item-symbol { display: grid; width: 24px; height: 24px; flex: 0 0 24px; border-radius: 0; background: transparent; color: #5964e8; }
+.organizer-wrap .tigao-organizer__card--project .tigao-organizer__item-symbol { color: #1da7c5; }
+.organizer-wrap .tigao-organizer__item-symbol svg { width: 22px; height: 22px; }
+.organizer-wrap .tigao-organizer__item-copy { padding-top: 1px; }
+.organizer-wrap .tigao-organizer__item-copy strong { color: #253969; font-size: 16px; font-weight: 800; }
+.organizer-wrap .tigao-organizer__item-copy small { margin-top: 3px; color: #8a9ab6; font-size: 10px; }
+.organizer-wrap .tigao-organizer__open-label { display: none; }
+.organizer-wrap .tigao-organizer__card-actions { order: 1; flex-wrap: nowrap; gap: 4px; border-top: 0; padding: 0 20px 9px; }
+.organizer-wrap .tigao-organizer__icon-button { width: 36px; height: 36px; min-height: 36px; flex: 0 0 36px; padding: 7px; border-radius: 12px; color: #8b9bb7; transition: background-color .15s ease, color .15s ease, opacity .15s ease; }
+.organizer-wrap .tigao-organizer__icon-button svg { width: 22px; height: 22px; }
+.organizer-wrap .tigao-organizer__icon-button:hover:not(:disabled) { background: #edf0ff; color: #5964e8; }
+.organizer-wrap .tigao-organizer__card::after { display: flex; min-height: 42px; order: 2; align-items: center; margin: 0 20px; padding-right: 72px; border-top: 1px solid #dbe4f3; color: #8192af; content: "点击打开作品"; font-size: 11px; font-weight: 600; }
+.organizer-wrap .tigao-organizer__card--group::after { content: "点击进入作品组"; }
+.organizer-wrap .tigao-organizer__card::before { position: absolute; right: 16px; bottom: 9px; z-index: 1; display: inline-flex; min-height: 26px; align-items: center; padding: 4px 11px; border: 1px solid #9fe5cd; border-radius: 999px; background: #e7fbf3; color: #108656; content: "Python"; font-size: 10px; font-weight: 800; }
+.organizer-wrap .tigao-organizer__card--group::before { border-color: #cbd3ff; background: #eef0ff; color: #4d58d4; content: "文件夹"; }
+.organizer-wrap .python-badge { display: none; }
+html[lang="en"] .organizer-wrap .tigao-organizer__card::after { content: "Open project"; }
+html[lang="en"] .organizer-wrap .tigao-organizer__card--group::after { content: "Open group"; }
+html[lang="en"] .organizer-wrap .tigao-organizer__card--group::before { content: "Folder"; }
+@media (max-width: 620px) { .organizer-wrap .tigao-organizer__card-actions { padding-right: 12px; padding-left: 12px; }.organizer-wrap .tigao-organizer__icon-button { width: 34px; height: 34px; min-height: 34px; flex-basis: 34px; }.organizer-wrap .tigao-organizer__card::after { margin-right: 14px; margin-left: 14px; } }
