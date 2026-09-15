@@ -27,7 +27,7 @@ export function createRunnerClient({ baseUrl, token, fetchImpl = fetch }) {
   }
 
   return {
-    submit: ({ id, source, stdin = '' }) => request('/runs', { method: 'POST', body: { id, source, stdin } }),
+    submit: ({ id, source, schemaVersion, entrypoint, files, stdin = '' }) => request('/runs', { method: 'POST', body: files === undefined ? { id, source, stdin } : { id, schemaVersion, entrypoint, files, stdin } }),
     get: (id) => request(`/runs/${encodeURIComponent(id)}`),
     stop: (id) => request(`/runs/${encodeURIComponent(id)}/stop`, { method: 'POST' })
   };

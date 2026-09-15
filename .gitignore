@@ -3,4 +3,5 @@ dist/
 .env
 coverage/
 release/
+storage/
 teaching-python-runner-*.tgz

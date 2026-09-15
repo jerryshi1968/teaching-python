@@ -8,7 +8,7 @@ const group = row => row && ({ id: row.id, ownerId: row.user_id, name: row.name,
 const run = row => row && ({ id: row.id, ownerId: row.user_id, projectId: row.project_id, requestId: row.request_id, version: row.version, source: row.source, stdin: row.stdin, status: row.status, stdout: row.stdout, stderr: row.stderr, createdAt: row.created_at?.toISOString(), completedAt: row.completed_at?.toISOString(), projectType: type });
 const projectColumns = 'p.id,p.user_id,p.name,p.parent_id,p.sort_order,d.version,d.source,d.stdin,p.created_at,p.updated_at';
 
-export class MysqlPythonRepository {
+class LegacyMysqlPythonRepository {
   #pool; #connection = null;
   constructor(pool) { this.#pool = pool; }
   #db() { return this.#connection || this.#pool; }
@@ -37,3 +37,5 @@ export class MysqlPythonRepository {
   async distributeProject({ project: item, teacherId, classId, requestId }) { const students = await this.listClassStudents(teacherId, classId); const existing = await this.#db().execute('SELECT copied_project_id FROM python_distributions WHERE teacher_user_id=? AND request_id=? ORDER BY recipient_user_id', [teacherId, requestId]); if (existing[0].length) return Promise.all(existing[0].map(row => this.getProject(row.copied_project_id))); const copies = []; for (const student of students) { const copied = await this.createProject({ ownerId: student.studentId, name: item.name, source: item.source, stdin: item.stdin }); await this.#db().execute('INSERT INTO python_distributions(id,teacher_user_id,source_project_id,class_id,request_id,recipient_user_id,copied_project_id,created_at) VALUES(?,?,?,?,?,?,?,?)', [randomUUID(), teacherId, item.id, classId, requestId, student.studentId, copied.id, now()]); copies.push(copied); } return copies; }
   async close() { await this.#pool.end(); }
 }
+
+export { MysqlPythonRepository } from './mysql-repository-v2.mjs';

@@ -14,7 +14,7 @@ async function readJson(request) {
   let size = 0;
   for await (const chunk of request) {
     size += chunk.length;
-    if (size > 96 * 1024) throw new RunnerError('invalid_request', 'The request is too large.');
+    if (size > 1100 * 1024) throw new RunnerError('invalid_request', 'The request is too large.');
     chunks.push(chunk);
   }
   try {
@@ -25,7 +25,7 @@ async function readJson(request) {
 }
 
 function publicTask(task) {
-  const { source, stdin, controller, ...result } = task;
+  const { source, stdin, files, entrypoint, schemaVersion, controller, ...result } = task;
   return result;
 }
 

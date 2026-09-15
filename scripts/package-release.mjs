@@ -12,6 +12,7 @@ const includedRoots = [
   'backend/src',
   'backend/migrations',
   'runner/src',
+  'shared',
   'docs/release-runbook.md',
   'package.json',
   'package-lock.json'

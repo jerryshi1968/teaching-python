@@ -1,4 +1,4 @@
-CREATE TABLE python_distributions (
+CREATE TABLE IF NOT EXISTS python_distributions (
   id CHAR(36) NOT NULL PRIMARY KEY,
   teacher_user_id INT NOT NULL,
   source_project_id CHAR(36) NOT NULL,

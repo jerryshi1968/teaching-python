@@ -9,7 +9,7 @@ function formatRunTime(value, language) {
   if (!value) return '';
   return new Intl.DateTimeFormat(language === 'en' ? 'en-US' : 'zh-CN', { dateStyle: 'short', timeStyle: 'medium' }).format(new Date(value));
 }
-export default function CodeEditor({ language, projectId, source, stdin, run, history = [], readOnly = false, historyView = null, onSourceChange, onStdinChange, onSave, onRun, onStop, onSelectHistory, onExitHistoryView, onClose }) {
+function LegacyCodeEditor({ language, projectId, source, stdin, run, history = [], readOnly = false, historyView = null, onSourceChange, onStdinChange, onSave, onRun, onStop, onSelectHistory, onExitHistoryView, onClose }) {
   const text = language === 'en' ? {
     back: 'Back to projects', save: 'Save', run: 'Run', stop: 'Stop', source: 'main.py', stdin: 'Standard input', stdout: 'Standard output', stderr: 'Standard error', history: 'Recent runs', idle: 'Ready to run', backToDraft: 'Back to current draft', viewingHistory: 'Viewing historical run'
   } : {
@@ -31,3 +31,5 @@ export default function CodeEditor({ language, projectId, source, stdin, run, hi
     </div>
   </section>;
 }
+
+export { default } from './CodeEditor-v2.jsx';

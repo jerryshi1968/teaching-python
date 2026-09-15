@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ApiError, pollRun } from './api.mjs';
+import { addProjectFile, deleteProjectFile, normalizeProjectSource, renameProjectFile, updateFileContent } from './project-source.mjs';
 
 function draftKey(projectId) {
   return `python:draft:${projectId}`;
@@ -18,10 +19,10 @@ function writeDraft(projectId, value) {
   localStorage.setItem(draftKey(projectId), JSON.stringify(value));
 }
 
-function legacyUseProjectEditor({ projectId, api, demoMode = false }) {
+export function useProjectEditor({ projectId, api, demoMode = false }) {
   const [project, setProject] = useState(null);
-  const [source, setSource] = useState('');
-  const [stdin, setStdin] = useState('');
+  const [snapshot, setSnapshot] = useState(() => normalizeProjectSource());
+  const [activePath, setActivePath] = useState('main.py');
   const [run, setRun] = useState(null);
   const [history, setHistory] = useState([]);
   const [historyView, setHistoryView] = useState(null);
@@ -35,9 +36,10 @@ function legacyUseProjectEditor({ projectId, api, demoMode = false }) {
     setHistoryView(null);
     if (!projectId) return undefined;
     if (demoMode) {
+      const content = normalizeProjectSource({ source: 'print("Hello, Python!")\n', stdin: '' });
       setProject({ id: projectId, version: 1, readOnly: false });
-      setSource('print("Hello, Python!")\n');
-      setStdin('');
+      setSnapshot(content);
+      setActivePath(content.entrypoint);
       setHistory([]);
       return undefined;
     }
@@ -45,10 +47,10 @@ function legacyUseProjectEditor({ projectId, api, demoMode = false }) {
     void (async () => {
       try {
         const loaded = await api.loadProject(projectId, { signal: controller.signal });
-        const draft = readDraft(projectId);
+        const content = normalizeProjectSource(readDraft(projectId) ?? loaded);
         setProject(loaded);
-        setSource(draft?.source ?? loaded.source);
-        setStdin(draft?.stdin ?? loaded.stdin);
+        setSnapshot(content);
+        setActivePath(content.entrypoint);
         const runs = await api.listRuns(projectId, { signal: controller.signal });
         setHistory(runs.runs ?? []);
       } catch (cause) {
@@ -58,22 +60,39 @@ function legacyUseProjectEditor({ projectId, api, demoMode = false }) {
     return () => controller.abort();
   }, [api, demoMode, projectId]);
 
-  const changeSource = useCallback((value) => {
-    setSource(value);
-    if (projectId && !demoMode) writeDraft(projectId, { source: value, stdin });
-  }, [demoMode, projectId, stdin]);
+  const updateSnapshot = useCallback((updater) => {
+    setSnapshot((current) => {
+      const next = typeof updater === 'function' ? updater(current) : updater;
+      if (projectId && !demoMode) writeDraft(projectId, next);
+      return next;
+    });
+  }, [demoMode, projectId]);
 
-  const changeStdin = useCallback((value) => {
-    setStdin(value);
-    if (projectId && !demoMode) writeDraft(projectId, { source, stdin: value });
-  }, [demoMode, projectId, source]);
+  const changeSource = useCallback((value) => updateSnapshot((current) => updateFileContent(current, activePath, value)), [activePath, updateSnapshot]);
+  const changeStdin = useCallback((value) => updateSnapshot((current) => ({ ...current, stdin: value })), [updateSnapshot]);
+  const addFile = useCallback((path) => {
+    updateSnapshot((current) => addProjectFile(current, path));
+    setActivePath(path);
+  }, [updateSnapshot]);
+  const renameFile = useCallback((path) => {
+    updateSnapshot((current) => renameProjectFile(current, activePath, path));
+    setActivePath(path);
+  }, [activePath, updateSnapshot]);
+  const deleteFile = useCallback(() => {
+    const next = deleteProjectFile(snapshot, activePath);
+    updateSnapshot(next);
+    setActivePath(next.entrypoint === activePath ? next.files[0].path : next.entrypoint);
+  }, [activePath, snapshot, updateSnapshot]);
+  const setEntrypoint = useCallback(() => updateSnapshot((current) => ({ ...current, entrypoint: activePath })), [activePath, updateSnapshot]);
 
   const save = useCallback(async () => {
     if (demoMode) throw new ApiError({ status: 501, code: 'DEMO_MODE', message: 'The local preview does not save or run code.' });
     if (!project || project.readOnly) return project;
     try {
-      const saved = await api.saveProject(project.id, { source, stdin, version: project.version });
+      const saved = await api.saveProject(project.id, { ...snapshot, version: project.version });
+      const content = normalizeProjectSource(saved);
       setProject((current) => ({ ...current, ...saved }));
+      setSnapshot(content);
       localStorage.removeItem(draftKey(project.id));
       setError(null);
       return saved;
@@ -81,7 +100,7 @@ function legacyUseProjectEditor({ projectId, api, demoMode = false }) {
       setError(cause);
       throw cause;
     }
-  }, [api, demoMode, project, source, stdin]);
+  }, [api, demoMode, project, snapshot]);
 
   const start = useCallback(async () => {
     setError(null);
@@ -109,8 +128,9 @@ function legacyUseProjectEditor({ projectId, api, demoMode = false }) {
     const selected = history.find((item) => item.id === id);
     if (!selected) return;
     try {
-      const snapshot = await api.getRunSource(id);
-      setHistoryView({ run: selected, source: snapshot.source, stdin: snapshot.stdin });
+      const historicalSnapshot = normalizeProjectSource(await api.getRunSource(id));
+      setHistoryView({ run: selected, snapshot: historicalSnapshot });
+      setActivePath(historicalSnapshot.entrypoint);
       setError(null);
     } catch (cause) {
       setError(cause);
@@ -118,7 +138,10 @@ function legacyUseProjectEditor({ projectId, api, demoMode = false }) {
     }
   }, [api, history]);
 
-  const exitHistoryView = useCallback(() => setHistoryView(null), []);
+  const exitHistoryView = useCallback(() => {
+    setHistoryView(null);
+    setActivePath(snapshot.entrypoint);
+  }, [snapshot.entrypoint]);
   const stop = useCallback(async () => {
     if (!run || !['queued', 'running'].includes(run.status)) return run;
     controllerRef.current?.abort();
@@ -128,7 +151,7 @@ function legacyUseProjectEditor({ projectId, api, demoMode = false }) {
     return stopped;
   }, [api, run]);
 
-  return { project, source, stdin, run, history, historyView, displaySource: historyView?.source ?? source, displayStdin: historyView?.stdin ?? stdin, displayRun: historyView?.run ?? run, error, changeSource, changeStdin, save, start, stop, selectHistory, exitHistoryView };
+  const displaySnapshot = historyView?.snapshot ?? snapshot;
+  const displayFile = displaySnapshot.files.find((file) => file.path === activePath) ?? displaySnapshot.files[0];
+  return { project, snapshot, activePath: displayFile?.path ?? activePath, files: displaySnapshot.files, entrypoint: displaySnapshot.entrypoint, stdin: snapshot.stdin, run, history, historyView, displaySource: displayFile?.content ?? '', displayStdin: displaySnapshot.stdin, displayRun: historyView?.run ?? run, error, setActivePath, changeSource, changeStdin, addFile, renameFile, deleteFile, setEntrypoint, save, start, stop, selectHistory, exitHistoryView };
 }
-
-export { useProjectEditor } from './useProjectEditor-v2.js';

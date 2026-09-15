@@ -5,7 +5,9 @@ import { readConfig } from './config.mjs';
 
 const migrations = [
   { id: '001_python', file: '001_python.sql' },
-  { id: '003_python_shared_projects', file: '003_python_shared_projects.sql' }
+  { id: '002_python_distributions', file: '002_python_distributions.sql' },
+  { id: '003_python_shared_projects', file: '003_python_shared_projects.sql' },
+  { id: '004_python_multifile', file: '004_python_multifile.sql' }
 ];
 
 async function readMigration(migration) {

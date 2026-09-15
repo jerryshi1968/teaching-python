@@ -62,3 +62,29 @@ test('runner reports a time limit when its deadline aborts a running task', asyn
   const task = await waitFor(runner, runner.submit({ id: 'run_1', source: 'while True: pass' }).id);
   assert.equal(task.status, 'time_limit');
 });
+
+test('runner preserves a validated multi-file tree and entrypoint for isolated execution', async () => {
+  const observed = [];
+  const runner = new PythonRunner({ execute: async ({ entrypoint, files }) => {
+    observed.push({ entrypoint, files });
+    return { exitCode: 0, stdout: '', stderr: '', outputLimited: false };
+  } });
+  const submitted = runner.submit({
+    id: 'run_multi',
+    schemaVersion: 2,
+    entrypoint: 'src/main.py',
+    files: [
+      { path: 'src/main.py', content: 'from helpers import answer\nprint(answer)\n' },
+      { path: 'helpers.py', content: 'answer = 42\n' }
+    ],
+    stdin: ''
+  });
+  await waitFor(runner, submitted.id);
+  assert.deepEqual(observed, [{
+    entrypoint: 'src/main.py',
+    files: [
+      { path: 'src/main.py', content: 'from helpers import answer\nprint(answer)\n' },
+      { path: 'helpers.py', content: 'answer = 42\n' }
+    ]
+  }]);
+});
