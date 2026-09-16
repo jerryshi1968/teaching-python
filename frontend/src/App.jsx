@@ -58,10 +58,14 @@ export default function App() {
     if (!name || creating) return;
     setCreating(true);
     try {
-      if (createKind === 'group') await adapter.createGroup({ name, parentId: folderId });
-      else await adapter.createProject({ name, parentId: folderId });
+      if (createKind === 'group') {
+        await adapter.createGroup({ name, parentId: folderId });
+        setOrganizerVersion((value) => value + 1);
+      } else {
+        const project = await adapter.createProject({ name, parentId: folderId });
+        setOpenedProject(project.id);
+      }
       setCreateKind(null);
-      setOrganizerVersion((value) => value + 1);
     } catch (error) {
       setNotice(error.message);
     } finally {
