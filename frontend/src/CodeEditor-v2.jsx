@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { python } from '@codemirror/lang-python';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 
 function formatRunStatus(status, language) {
   const labels = language === 'en'
@@ -52,9 +53,9 @@ export default function CodeEditor({ language, projectId, version, files = [], a
     <div className="editor-grid">
       <div className="file-workspace">
         <aside className="file-sidebar">
-          <div className="file-sidebar-heading"><span>{text.files}</span>{!effectiveReadOnly && <button type="button" title={text.add} onClick={() => { const path = promptForPath(); if (path) runFileAction(() => onAddFile(path)); }}>＋</button>}</div>
+          <div className="file-sidebar-heading"><span>{text.files}</span>{!effectiveReadOnly && <div className="file-sidebar-actions"><button type="button" title={text.add} aria-label={text.add} onClick={() => { const path = promptForPath(); if (path) runFileAction(() => onAddFile(path)); }}><Plus aria-hidden="true" /></button><button type="button" title={text.rename} aria-label={text.rename} onClick={() => { const path = promptForPath(activePath); if (path && path !== activePath) runFileAction(() => onRenameFile(path)); }}><Pencil aria-hidden="true" /></button><button type="button" title={text.remove} aria-label={text.remove} onClick={() => { if (window.confirm(text.deletePrompt)) runFileAction(onDeleteFile); }}><Trash2 aria-hidden="true" /></button></div>}</div>
           <div className="file-list">{files.map((file) => <button key={file.path} type="button" className={`file-item ${file.path === activePath ? 'active' : ''}`} onClick={() => onActivePathChange(file.path)}><span>{file.path}</span>{file.path === entrypoint && <small>{text.entrypoint}</small>}</button>)}</div>
-          {!effectiveReadOnly && <div className="file-actions"><button type="button" onClick={() => { const path = promptForPath(activePath); if (path && path !== activePath) runFileAction(() => onRenameFile(path)); }}>{text.rename}</button><button type="button" onClick={() => { if (window.confirm(text.deletePrompt)) runFileAction(onDeleteFile); }}>{text.remove}</button>{activePath?.endsWith('.py') && activePath !== entrypoint && <button type="button" onClick={onSetEntrypoint}>{text.setEntrypoint}</button>}</div>}
+          {!effectiveReadOnly && activePath?.endsWith('.py') && activePath !== entrypoint && <div className="file-actions"><button type="button" onClick={onSetEntrypoint}>{text.setEntrypoint}</button></div>}
         </aside>
         <section className="code-panel"><span>{activePath}{viewingHistory && ` · ${text.viewingHistory}`}</span><div className="editor-frame"><CodeMirror className="python-code-editor" value={source} theme="dark" extensions={editorExtensions} editable={!effectiveReadOnly} readOnly={effectiveReadOnly} indentWithTab basicSetup={{ lineNumbers: true, highlightActiveLineGutter: true, foldGutter: true, indentOnInput: true, bracketMatching: true, closeBrackets: true, autocompletion: true, highlightActiveLine: true, highlightSelectionMatches: true }} aria-label={activePath} onChange={onSourceChange} onUpdate={handleEditorUpdate} /><div className="editor-statusbar"><span>{activePath} · UTF-8 · {cursorLabel}</span><span>{text.version} {displayVersion ?? '—'}</span></div></div></section>
       </div>
