@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { ApiError } from '../frontend/src/api.mjs';
 import { createProjectOrganizerAdapter } from '../frontend/src/project-organizer-adapter.mjs';
 
 function response(payload, ok = true, status = 200) {
@@ -43,4 +44,25 @@ test('the Python API client sends its independent language choice and preserves 
     return response({ code: 'VERSION_CONFLICT', message: 'Conflict' }, false, 409);
   }, getLanguage: () => 'en' });
   await assert.rejects(() => api('/projects/project_1'), (error) => error instanceof ApiError && error.status === 409 && error.code === 'VERSION_CONFLICT');
+});
+
+test('the Python organizer adapter returns to the root when a restored group no longer exists', async () => {
+  const calls = [];
+  let invalidParentCount = 0;
+  const api = async (path) => {
+    calls.push(path);
+    if (path === '/workspace?parentId=999') throw new ApiError({ status: 404, code: 'NOT_FOUND', message: 'Missing group' });
+    if (path === '/workspace?') return { groups: [], projects: [], readOnly: false };
+    if (path === '/workspace/groups') return { groups: [] };
+    throw new Error(`Unexpected path: ${path}`);
+  };
+  const adapter = createProjectOrganizerAdapter({ api, navigate: () => {}, onInvalidParent: () => { invalidParentCount += 1; } });
+
+  const directory = await adapter.loadDirectory({ ownerId: null, parentId: 999 });
+
+  assert.deepEqual(directory.projects, []);
+  assert.deepEqual(directory.breadcrumbs, []);
+  assert.equal(invalidParentCount, 1);
+  assert.ok(calls.includes('/workspace?parentId=999'));
+  assert.ok(calls.includes('/workspace?'));
 });

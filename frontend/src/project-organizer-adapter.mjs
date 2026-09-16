@@ -38,7 +38,7 @@ function breadcrumbs(groups, parentId) {
   return result;
 }
 
-export function createProjectOrganizerAdapter({ api, navigate }) {
+export function createProjectOrganizerAdapter({ api, navigate, onInvalidParent }) {
   let latestLoad = 0;
 
   async function allGroups(ownerId) {
@@ -57,12 +57,23 @@ export function createProjectOrganizerAdapter({ api, navigate }) {
       const query = new URLSearchParams();
       if (ownerId !== null && ownerId !== undefined) query.set('studentId', ownerId);
       if (parentId !== null && parentId !== undefined) query.set('parentId', parentId);
-      const [directory, groups] = await Promise.all([api(`/workspace?${query}`), allGroups(ownerId)]);
+      let activeParentId = parentId;
+      let directory;
+      let groups;
+      try {
+        [directory, groups] = await Promise.all([api(`/workspace?${query}`), allGroups(ownerId)]);
+      } catch (error) {
+        if (activeParentId === null || activeParentId === undefined || !(error instanceof ApiError) || error.code !== 'NOT_FOUND') throw error;
+        query.delete('parentId');
+        [directory, groups] = await Promise.all([api(`/workspace?${query}`), allGroups(ownerId)]);
+        activeParentId = null;
+      }
       if (requestNumber !== latestLoad) throw new ApiError({ status: 409, code: 'STALE_RESPONSE', message: 'A newer directory request is already active.' });
+      if (activeParentId !== parentId) onInvalidParent?.();
       return {
         projects: directory.projects.map(projectSummary),
         groups: directory.groups.map(groupSummary),
-        breadcrumbs: breadcrumbs(groups, parentId),
+        breadcrumbs: breadcrumbs(groups, activeParentId),
         owner: directory.owner ?? null,
         readOnly: Boolean(directory.readOnly)
       };

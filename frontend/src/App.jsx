@@ -9,6 +9,7 @@ import { createApiClient, createPythonApi } from './api.mjs';
 import { createProjectOrganizerAdapter } from './project-organizer-adapter.mjs';
 import { useProjectEditor } from './useProjectEditor.js';
 import { useClassBoard } from './useClassBoard.js';
+import { readWorkspaceNavigation, writeWorkspaceNavigation } from './workspace-navigation.mjs';
 
 const organizerIcons = {
   group: <Folder aria-hidden="true" />,
@@ -29,27 +30,41 @@ const organizerMessages = {
 
 export default function App() {
   const { language } = useLanguage();
-  const [folderId, setFolderId] = useState(null);
+  const initialNavigation = useMemo(() => readWorkspaceNavigation(typeof window === 'undefined' ? '' : window.location.search), []);
+  const [folderId, setFolderId] = useState(initialNavigation.folderId);
   const [openedProject, setOpenedProject] = useState(null);
   const [notice, setNotice] = useState('');
   const [organizerVersion, setOrganizerVersion] = useState(0);
   const [createKind, setCreateKind] = useState(null);
   const [createName, setCreateName] = useState('');
   const [creating, setCreating] = useState(false);
+  const [navigationReady, setNavigationReady] = useState(false);
 
   const languageRef = useRef(language);
   useEffect(() => { languageRef.current = language; }, [language]);
   const request = useMemo(() => createApiClient({ getLanguage: () => languageRef.current }), []);
   const api = useMemo(() => createPythonApi({ getLanguage: () => languageRef.current }), []);
   const editor = useProjectEditor({ projectId: openedProject, api, demoMode: import.meta.env.DEV });
-  const classroom = useClassBoard({ api, demoMode: import.meta.env.DEV });
+  const classroom = useClassBoard({ api, demoMode: import.meta.env.DEV, initialClassId: initialNavigation.classId, initialStudentId: initialNavigation.studentId });
+  useEffect(() => {
+    if (!classroom.ready || navigationReady) return;
+    const classChanged = initialNavigation.classId !== null && String(initialNavigation.classId) !== String(classroom.classId);
+    const studentChanged = String(initialNavigation.studentId) !== String(classroom.studentId);
+    if (classChanged || studentChanged) setFolderId(null);
+    setNavigationReady(true);
+  }, [classroom.classId, classroom.ready, classroom.studentId, initialNavigation, navigationReady]);
+  useEffect(() => {
+    if (!classroom.ready || !navigationReady || typeof window === 'undefined') return;
+    const search = writeWorkspaceNavigation(window.location.search, { classId: classroom.classId, studentId: classroom.studentId, folderId });
+    window.history.replaceState(window.history.state, '', `${window.location.pathname}${search}${window.location.hash}`);
+  }, [classroom.classId, classroom.ready, classroom.studentId, folderId, navigationReady]);
   useEffect(() => { setNotice(editor.error?.message ?? ''); }, [editor.error]);
   useEffect(() => { if (classroom.error) setNotice(classroom.error.message); }, [classroom.error]);
   const adapter = useMemo(() => {
     const openProject = (id) => { setOpenedProject(id); };
     return import.meta.env.DEV
       ? createDemoOrganizerAdapter(openProject)
-      : createProjectOrganizerAdapter({ api: request, navigate: openProject });
+      : createProjectOrganizerAdapter({ api: request, navigate: openProject, onInvalidParent: () => setFolderId(null) });
   }, [request]);
   const openCreateDialog = (kind) => { setCreateName(''); setCreateKind(kind); };
   const selectClass = (id) => { setFolderId(null); classroom.setClassId(id); };
@@ -102,7 +117,7 @@ export default function App() {
       {notice && <div className="notice" role="status">{notice}<button type="button" onClick={() => setNotice('')}>×</button></div>}
       {createKind && <div className="create-modal-backdrop" role="presentation"><form className="create-modal" onSubmit={(event) => void submitCreate(event)}><h2>{createKind === 'group' ? (language === 'en' ? 'New group' : '新建作品组') : (language === 'en' ? 'Create a project' : '动手做个新作品')}</h2><label>{createKind === 'group' ? (language === 'en' ? 'Group name' : '作品组名称') : (language === 'en' ? 'Project name' : '作品名称')}<input autoFocus value={createName} maxLength="100" onChange={(event) => setCreateName(event.target.value)} /></label><div className="create-modal-actions"><button type="button" className="secondary" onClick={() => setCreateKind(null)}>{language === 'en' ? 'Cancel' : '取消'}</button><button type="submit" className="primary" disabled={!createName.trim() || creating}>{creating ? (language === 'en' ? 'Creating…' : '正在新建…') : (language === 'en' ? 'Confirm' : '确定')}</button></div></form></div>}
       {openedProject && <CodeEditor language={language} projectId={openedProject} version={editor.project?.version} files={editor.files} activePath={editor.activePath} entrypoint={editor.entrypoint} source={editor.displaySource} stdin={editor.displayStdin} run={editor.displayRun} history={editor.history} historyView={editor.historyView} onSelectHistory={editor.selectHistory} onExitHistoryView={editor.exitHistoryView} readOnly={editor.project?.readOnly || classroom.studentId !== 'me'} onActivePathChange={editor.setActivePath} onAddFile={editor.addFile} onRenameFile={editor.renameFile} onDeleteFile={editor.deleteFile} onSetEntrypoint={editor.setEntrypoint} onSourceChange={editor.changeSource} onStdinChange={editor.changeStdin} onClose={() => setOpenedProject(null)} onSave={() => void editor.save().catch(() => {})} onRun={() => void editor.start().catch(() => {})} onStop={() => void editor.stop().catch(() => {})} />}
-      <section className="organizer-wrap"><ProjectOrganizer key={`${organizerVersion}:${classroom.studentId}`} adapter={adapter} ownerId={classroom.studentId === 'me' ? null : classroom.studentId} currentParentId={folderId} onCurrentParentIdChange={setFolderId} messages={activeMessages} icons={organizerIcons} renderProjectExtraActions={() => <span className="python-badge">Python</span>} /></section>
+      {classroom.ready && navigationReady && <section className="organizer-wrap"><ProjectOrganizer key={`${organizerVersion}:${classroom.studentId}`} adapter={adapter} ownerId={classroom.studentId === 'me' ? null : classroom.studentId} currentParentId={folderId} onCurrentParentIdChange={setFolderId} messages={activeMessages} icons={organizerIcons} renderProjectExtraActions={() => <span className="python-badge">Python</span>} /></section>}
     </section>
   </main>;
 }
